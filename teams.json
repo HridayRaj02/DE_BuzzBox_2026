@@ -1,0 +1,11 @@
+{
+  "team_number": "T0107",
+  "group_lead": { "name": "Hridayraj Singh Krishnawat", "enrollment_no": "2501010187", "github": "HridayRaj02" },
+  "members": [
+    { "name": "Ishaan Gupta", "enrollment_no": "2501010634", "github":"IshaanGupta-crypto" },
+    { "name": "Akshansh Gandhi", "enrollment_no": "2501010045", "github": "AkshanshCodes" },
+    { "name": "Lakshay Choudhary", "enrollment_no": "2501010623", "github": "Lakshay-001" }
+  ],
+  "postgres_version": "18",
+  "laptop_used_for_benchmarks": "Apple MacBook (Apple Silicon)"
+}
