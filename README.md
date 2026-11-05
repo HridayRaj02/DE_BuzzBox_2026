@@ -22,10 +22,10 @@
 
 | Role | Name | Enrollment No. | GitHub Username |
 |------|------|----------------|-----------------|
-| Group Lead | | | |
-| Member 2 | | | |
-| Member 3 | | | |
-| Member 4 | | | |
+| Group Lead | Hridayraj Singh Krishnawat | 2501010187 | HridayRaj02 |
+| Member 2 | Ishaan Gupta | 2501010634 | IshaanGupta-crypto |
+| Member 3 | Akshansh Gandhi | 2501010045 | AkshanshCodes |
+| Member 4 | Lakshay Choudhary | 2501010623 | Lakshay-001 |
 
 **Team No.:** ____ · **Section:** ____ · **Repository URL:** ____
 
