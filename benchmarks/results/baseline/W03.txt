@@ -1,0 +1,51 @@
+=== W03 run 1 ===
+Update on accounts  (cost=8.46..16.47 rows=0 width=0) (actual time=0.302..0.302 rows=0.00 loops=1)
+  Buffers: shared hit=39 dirtied=6
+  InitPlan 1
+    ->  Index Scan using plans_plan_name_key on plans  (cost=0.15..8.17 rows=1 width=4) (actual time=0.009..0.009 rows=1.00 loops=1)
+          Index Cond: ((plan_name)::text = 'STANDARD'::text)
+          Index Searches: 1
+          Buffers: shared hit=2
+  ->  Index Scan using accounts_pkey on accounts  (cost=0.29..8.30 rows=1 width=10) (actual time=0.018..0.018 rows=1.00 loops=1)
+        Index Cond: (account_id = 1409)
+        Index Searches: 1
+        Buffers: shared hit=5
+Planning:
+  Buffers: shared hit=145
+Planning Time: 0.243 ms
+Trigger for constraint accounts_plan_id_fkey: time=0.069 calls=1
+Execution Time: 1.349 ms
+=== W03 run 2 ===
+Update on accounts  (cost=8.46..16.47 rows=0 width=0) (actual time=0.160..0.161 rows=0.00 loops=1)
+  Buffers: shared hit=43 dirtied=1
+  InitPlan 1
+    ->  Index Scan using plans_plan_name_key on plans  (cost=0.15..8.17 rows=1 width=4) (actual time=0.005..0.006 rows=1.00 loops=1)
+          Index Cond: ((plan_name)::text = 'STANDARD'::text)
+          Index Searches: 1
+          Buffers: shared hit=2
+  ->  Index Scan using accounts_pkey on accounts  (cost=0.29..8.30 rows=1 width=10) (actual time=0.016..0.017 rows=1.00 loops=1)
+        Index Cond: (account_id = 1409)
+        Index Searches: 1
+        Buffers: shared hit=7
+Planning:
+  Buffers: shared hit=145
+Planning Time: 0.335 ms
+Trigger for constraint accounts_plan_id_fkey: time=0.053 calls=1
+Execution Time: 0.265 ms
+=== W03 run 3 ===
+Update on accounts  (cost=8.46..16.47 rows=0 width=0) (actual time=0.145..0.145 rows=0.00 loops=1)
+  Buffers: shared hit=43 dirtied=1
+  InitPlan 1
+    ->  Index Scan using plans_plan_name_key on plans  (cost=0.15..8.17 rows=1 width=4) (actual time=0.008..0.008 rows=1.00 loops=1)
+          Index Cond: ((plan_name)::text = 'STANDARD'::text)
+          Index Searches: 1
+          Buffers: shared hit=2
+  ->  Index Scan using accounts_pkey on accounts  (cost=0.29..8.30 rows=1 width=10) (actual time=0.017..0.017 rows=1.00 loops=1)
+        Index Cond: (account_id = 1409)
+        Index Searches: 1
+        Buffers: shared hit=7
+Planning:
+  Buffers: shared hit=145
+Planning Time: 0.233 ms
+Trigger for constraint accounts_plan_id_fkey: time=0.049 calls=1
+Execution Time: 0.246 ms

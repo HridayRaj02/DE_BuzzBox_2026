@@ -1,0 +1,36 @@
+=== R02 run 1 ===
+GroupAggregate  (cost=0.29..38.53 rows=4 width=14) (actual time=0.025..0.027 rows=2.00 loops=1)
+  Group Key: season_no
+  Buffers: shared hit=4
+  ->  Index Scan using episodes_title_id_season_no_episode_no_key on episodes  (cost=0.29..38.35 rows=18 width=6) (actual time=0.010..0.011 rows=13.00 loops=1)
+        Index Cond: (title_id = 2909)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=115 read=1 dirtied=1
+Planning Time: 0.436 ms
+Execution Time: 0.066 ms
+=== R02 run 2 ===
+GroupAggregate  (cost=0.29..38.53 rows=4 width=14) (actual time=0.021..0.023 rows=2.00 loops=1)
+  Group Key: season_no
+  Buffers: shared hit=4
+  ->  Index Scan using episodes_title_id_season_no_episode_no_key on episodes  (cost=0.29..38.35 rows=18 width=6) (actual time=0.014..0.016 rows=13.00 loops=1)
+        Index Cond: (title_id = 2909)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=116
+Planning Time: 0.272 ms
+Execution Time: 0.098 ms
+=== R02 run 3 ===
+GroupAggregate  (cost=0.29..38.53 rows=4 width=14) (actual time=0.011..0.012 rows=2.00 loops=1)
+  Group Key: season_no
+  Buffers: shared hit=4
+  ->  Index Scan using episodes_title_id_season_no_episode_no_key on episodes  (cost=0.29..38.35 rows=18 width=6) (actual time=0.006..0.007 rows=13.00 loops=1)
+        Index Cond: (title_id = 2909)
+        Index Searches: 1
+        Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=116
+Planning Time: 0.200 ms
+Execution Time: 0.039 ms

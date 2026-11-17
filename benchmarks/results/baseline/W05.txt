@@ -1,0 +1,63 @@
+=== W05 run 1 ===
+Update on accounts a  (cost=4475.90..5154.28 rows=0 width=0) (actual time=15.779..15.779 rows=0.00 loops=1)
+  Buffers: shared hit=10675 read=7 dirtied=368 written=20
+  ->  Hash Join  (cost=4475.90..5154.28 rows=965 width=60) (actual time=5.230..7.801 rows=634.00 loops=1)
+        Hash Cond: (a.account_id = i.account_id)
+        Buffers: shared hit=1950
+        ->  Seq Scan on accounts a  (cost=0.00..622.50 rows=21282 width=10) (actual time=0.004..1.617 rows=21282.00 loops=1)
+              Filter: ((status)::text = 'ACTIVE'::text)
+              Rows Removed by Filter: 3718
+              Buffers: shared hit=310
+        ->  Hash  (cost=4461.73..4461.73 rows=1134 width=10) (actual time=5.218..5.218 rows=1376.00 loops=1)
+              Buckets: 2048  Batches: 1  Memory Usage: 76kB
+              Buffers: shared hit=1640
+              ->  Seq Scan on invoices i  (cost=0.00..4461.73 rows=1134 width=10) (actual time=3.567..5.098 rows=1376.00 loops=1)
+                    Filter: ((billing_period_start = '2026-06-01'::date) AND ((status)::text = 'FAILED'::text))
+                    Rows Removed by Filter: 131681
+                    Buffers: shared hit=1640
+Planning:
+  Buffers: shared hit=288
+Planning Time: 0.550 ms
+Execution Time: 15.831 ms
+=== W05 run 2 ===
+Update on accounts a  (cost=4475.90..5169.60 rows=0 width=0) (actual time=13.048..13.049 rows=0.00 loops=1)
+  Buffers: shared hit=12432 dirtied=9 written=9
+  ->  Hash Join  (cost=4475.90..5169.60 rows=965 width=60) (actual time=5.318..7.792 rows=634.00 loops=1)
+        Hash Cond: (a.account_id = i.account_id)
+        Buffers: shared hit=1957
+        ->  Seq Scan on accounts a  (cost=0.00..636.56 rows=21763 width=10) (actual time=0.002..1.671 rows=21282.00 loops=1)
+              Filter: ((status)::text = 'ACTIVE'::text)
+              Rows Removed by Filter: 3718
+              Buffers: shared hit=317
+        ->  Hash  (cost=4461.73..4461.73 rows=1134 width=10) (actual time=5.305..5.305 rows=1376.00 loops=1)
+              Buckets: 2048  Batches: 1  Memory Usage: 76kB
+              Buffers: shared hit=1640
+              ->  Seq Scan on invoices i  (cost=0.00..4461.73 rows=1134 width=10) (actual time=3.424..5.192 rows=1376.00 loops=1)
+                    Filter: ((billing_period_start = '2026-06-01'::date) AND ((status)::text = 'FAILED'::text))
+                    Rows Removed by Filter: 131681
+                    Buffers: shared hit=1640
+Planning:
+  Buffers: shared hit=289
+Planning Time: 0.454 ms
+Execution Time: 13.095 ms
+=== W05 run 3 ===
+Update on accounts a  (cost=4475.90..5187.11 rows=0 width=0) (actual time=14.537..14.538 rows=0.00 loops=1)
+  Buffers: shared hit=12518 dirtied=9 written=8
+  ->  Hash Join  (cost=4475.90..5187.11 rows=965 width=60) (actual time=5.794..8.348 rows=634.00 loops=1)
+        Hash Cond: (a.account_id = i.account_id)
+        Buffers: shared hit=1965
+        ->  Seq Scan on accounts a  (cost=0.00..652.62 rows=22312 width=10) (actual time=0.002..1.736 rows=21282.00 loops=1)
+              Filter: ((status)::text = 'ACTIVE'::text)
+              Rows Removed by Filter: 3718
+              Buffers: shared hit=325
+        ->  Hash  (cost=4461.73..4461.73 rows=1134 width=10) (actual time=5.783..5.783 rows=1376.00 loops=1)
+              Buckets: 2048  Batches: 1  Memory Usage: 76kB
+              Buffers: shared hit=1640
+              ->  Seq Scan on invoices i  (cost=0.00..4461.73 rows=1134 width=10) (actual time=3.915..5.614 rows=1376.00 loops=1)
+                    Filter: ((billing_period_start = '2026-06-01'::date) AND ((status)::text = 'FAILED'::text))
+                    Rows Removed by Filter: 131681
+                    Buffers: shared hit=1640
+Planning:
+  Buffers: shared hit=289
+Planning Time: 0.403 ms
+Execution Time: 14.584 ms

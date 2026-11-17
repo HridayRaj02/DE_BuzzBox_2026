@@ -12,90 +12,115 @@ Summary CSV: `benchmarks/results/baseline/summary.csv`
 
 ---
 
-## Timing Table (all 30 queries)
+# Phase 3: Baseline Query Timings
 
-| Query | Type | Run 1 (ms) | Run 2 (ms) | Run 3 (ms) | Average (ms) |
-|-------|------|----------:|----------:|----------:|------------:|
-| R01: Continue Watching for profile 7043 | READ | — | — | — | — |
-| R02: Episode count by season for series 2909 | READ | — | — | — | — |
-| R03: Most-watched titles on 30 June 2026 | READ | — | — | — | — |
-| R04: Kids Comedy row, U/UA7 titles | READ | — | — | — | — |
-| R05: Search titles containing “love” | READ | — | — | — | — |
-| R06: My List for profile 7393 | READ | — | — | — | — |
-| R07: Autoplay next episode of series 2909 | READ | — | — | — | — |
-| R08: Binge sessions in June 2026 | READ | — | — | — | — |
-| R09: Completion rate per genre in 2026 | READ | — | — | — | — |
-| R10: Case-insensitive account sign-in | READ | — | — | — | — |
-| R11: Failed June invoices for active/on-hold accounts | READ | — | — | — | — |
-| R12: Monthly cancellations and average tenure | READ | — | — | — | — |
-| R13: Unwatched episodes of series 2523 | READ | — | — | — | — |
-| R14: Kids profiles watching above maturity limit | READ | — | — | — | — |
-| R15: Monthly recurring revenue by plan | READ | — | — | — | — |
-| R16: Accounts exceeding simultaneous stream limits | READ | — | — | — | — |
-| R17: LOVE rating share, Originals vs licensed | READ | — | — | — | — |
-| R18: Viewing hours per device per month | READ | — | — | — | — |
-| R19: Views and latest view for every Original | READ | — | — | — | — |
-| R20: Titles most added to My Lists in June | READ | — | — | — | — |
-| R21: On-hold accounts past their billing date | READ | — | — | — | — |
-| R22: Licensed titles leaving in July 2026 | READ | — | — | — | — |
-| R23: Viewing activity, page 6,001 | READ | — | — | — | — |
-| R24: Profiles belonging to account 1409 | READ | — | — | — | — |
-| R25: Titles sharing at least two genres with series 2909 | READ | — | — | — | — |
-| W01: Insert a viewing event for episode S1E5 | WRITE | — | — | — | — |
-| W02: Add a title to My List | WRITE | — | — | — | — |
-| W03: Change account 1409 to STANDARD plan | WRITE | — | — | — | — |
-| W04: Create July invoices for active accounts | WRITE | — | — | — | — |
-| W05: Put accounts on hold after failed June invoice | WRITE | — | — | — | — |
-| **Total (sum of all 30)** | | | | | — |
+## 1. Benchmark Methodology
 
----
+The baseline benchmark was executed against the `netflix_db` database using the provided `benchmarks/run_benchmark.sh` script.
 
-## Expected Scan Patterns and Likely Cost Drivers
+- Total queries benchmarked: 30
+- Read queries: 25 (R01–R25)
+- Write queries: 5 (W01–W05)
+- Runs per query: 3
+- Measurement: PostgreSQL `EXPLAIN (ANALYZE, BUFFERS)` execution time
+- Write queries were executed inside transactions and rolled back to prevent permanent data changes.
 
-The notes below are hypotheses from the schema and SQL workload, not measured `EXPLAIN` output. PostgreSQL can choose sequential scans for small tables even when an index exists. Confirm each plan after collecting the baseline.
+The benchmark output is stored in `benchmarks/results/baseline/`.
 
-| Query | Likely scan / reason |
-|-------|----------------------|
-| R01 | `viewing_activity` likely sequential scan; no index begins with `(profile_id, title_id, started_at)` to find the profile’s latest unfinished plays. |
-| R02 | `episodes` can use the UNIQUE index on `(title_id, season_no, episode_no)` if defined; filtering and grouping one series should be relatively selective. |
-| R03 | `viewing_activity` likely sequential scan for the one-day range; no index on `started_at`. Then aggregate viewers and join titles. |
-| R04 | `genres` UNIQUE index finds Comedy; `title_genres` PK begins with `title_id`, so reverse genre lookup may scan it. Titles are filtered by maturity and sorted by `added_on`. |
-| R05 | Sequential scan on `titles`; `ILIKE '%love%'` has a leading wildcard and cannot use a normal B-tree index. |
-| R06 | `my_list` composite PK starts with `profile_id`, supporting the profile lookup; title lookups use the titles PK. Sorting that profile’s saved rows may require a sort. |
-| R07 | The episodes UNIQUE index supports the series prefix, but tuple comparison and order may still read several episodes before returning one row. |
-| R08 | Sequential scan on `viewing_activity`; timestamp predicate and grouping by profile, title, and date have no matching composite index. |
-| R09 | Sequential scan on viewing activity (year extraction), then joins through title_genres and genres and aggregates. |
-| R10 | Sequential scan on accounts: `lower(email)` does not match the ordinary UNIQUE index on `email`. |
-| R11 | Invoice filters on status and billing period lack a supporting index; account PK/FK joins are available, but the invoice scan is likely dominant. |
-| R12 | Sequential scan on accounts; extracting year from `cancelled_on` prevents a simple date-range index condition. Aggregation groups cancellations by month. |
-| R13 | `episodes` can use the `(title_id, season_no, episode_no)` index for the series filter. The `NOT IN` subquery scans viewing activity and includes NULL episode IDs; this can make the predicate return no rows. |
-| R14 | Sequential scan on viewing activity with joins through profile and title PKs; maturity comparison is calculated row by row. |
-| R15 | Sequential scan on accounts, then plan PK lookups and aggregation; accounts has no index on status. |
-| R16 | Sequential scan of viewing activity and several joins, followed by a large grouping by account and hour. |
-| R17 | Ratings scan and title PK lookups, then grouped aggregation; no additional index is necessary for the full-table report. |
-| R18 | Sequential scan on viewing activity; `started_at::date` is applied to rows and there is no timestamp index. Grouping by month and device also needs aggregation. |
-| R19 | Likely expensive correlated work: for each Original, two subqueries count and find max time in viewing activity by `title_id`; no index supports either lookup. |
-| R20 | Sequential scan on My List for the June range; no index on `added_at`, then grouping and sorting by add count. |
-| R21 | Sequential scan on accounts because status and next billing date have no supporting index. |
-| R22 | Sequential scan on titles for `leaving_on`; no index on the date. |
-| R23 | The timestamp ordering can use the viewing_activity PK only if the plan can satisfy the requested order (the PK is `view_id`, not `started_at`). Likely full scan plus sort, then discard 150,000 rows for OFFSET. |
-| R24 | Sequential scan on profiles because the account FK has no index; then sort that account’s profiles by creation time. |
-| R25 | `title_genres` PK supports the source-title lookup by `title_id`; joining other rows by `genre_id` lacks a leading index, so the self-join may scan the link table. |
-| W01 | Insert into viewing_activity plus FK checks on profile/title/episode; referenced PK indexes support those checks. |
-| W02 | Insert into My List; composite PK detects an existing `(profile_id, title_id)` pair. |
-| W03 | Plan name lookup uses the plans UNIQUE index; account 1409 uses the accounts PK. |
-| W04 | Bulk insert for active accounts; account scan and plan PK joins precede invoice inserts and FK/constraint checks. |
-| W05 | Account update scans active accounts and checks invoice existence per candidate; invoice filters lack a supporting composite index. |
+## 2. Baseline Timing Results
 
----
+All execution times are in milliseconds (ms).
 
-## Key Observations to Confirm After Running
+| Query | Type | Run 1 | Run 2 | Run 3 | Average |
+|---|---|---:|---:|---:|---:|
+| R01 | READ | 14.240 | 7.442 | 6.363 | 9.348 |
+| R02 | READ | 0.066 | 0.098 | 0.039 | 0.068 |
+| R03 | READ | 5.279 | 7.549 | 7.230 | 6.686 |
+| R04 | READ | 0.596 | 0.554 | 0.528 | 0.559 |
+| R05 | READ | 0.613 | 0.590 | 0.605 | 0.603 |
+| R06 | READ | 0.053 | 0.051 | 0.052 | 0.052 |
+| R07 | READ | 0.020 | 0.018 | 0.019 | 0.019 |
+| R08 | READ | 7.368 | 7.571 | 7.516 | 7.485 |
+| R09 | READ | 24.592 | 23.763 | 25.411 | 24.589 |
+| R10 | READ | 3.048 | 2.796 | 2.813 | 2.886 |
+| R11 | READ | 6.884 | 6.352 | 6.335 | 6.524 |
+| R12 | READ | 1.209 | 1.289 | 1.209 | 1.236 |
+| R13 | READ | 16.358 | 16.747 | 16.778 | 16.628 |
+| R14 | READ | 21.147 | 19.782 | 19.873 | 20.267 |
+| R15 | READ | 3.854 | 3.917 | 3.878 | 3.883 |
+| R16 | READ | 119.167 | 120.308 | 119.812 | 119.762 |
+| R17 | READ | 5.479 | 4.959 | 4.976 | 5.138 |
+| R18 | READ | 25.913 | 25.824 | 25.898 | 25.878 |
+| R19 | READ | 6014.113 | 6138.327 | 6176.013 | 6109.484 |
+| R20 | READ | 2.815 | 2.546 | 2.520 | 2.627 |
+| R21 | READ | 1.108 | 1.095 | 1.055 | 1.086 |
+| R22 | READ | 0.154 | 0.151 | 0.152 | 0.152 |
+| R23 | READ | 38.533 | 40.317 | 49.416 | 42.755 |
+| R24 | READ | 2.587 | 2.516 | 1.875 | 2.326 |
+| R25 | READ | 0.966 | 0.665 | 0.684 | 0.772 |
+| W01 | WRITE | 1.162 | 0.555 | 0.406 | 0.708 |
+| W02 | WRITE | 0.655 | 0.574 | 0.444 | 0.558 |
+| W03 | WRITE | 1.349 | 0.265 | 0.246 | 0.620 |
+| W04 | WRITE | 129.128 | 144.973 | 134.907 | 136.336 |
+| W05 | WRITE | 15.831 | 13.095 | 14.584 | 14.503 |
 
-1. **R19 is a likely top read-query cost.** The correlated count and maximum timestamp are repeated for each Netflix Original without an index on `viewing_activity.title_id`.
-2. **R23 is sensitive to deep OFFSET pagination.** It must skip 150,000 rows, and no index orders viewing records by `started_at`.
-3. **R16 and R09 are broad analytics queries.** They read and aggregate much of viewing activity; workload growth will increase their cost.
-4. **R05 and R10 expose different index limitations.** A normal B-tree cannot help the leading-wildcard search; case-insensitive sign-in needs an expression index matching `lower(email)` if allowed in the optimization phase.
-5. **R13 has a correctness issue as well as a performance concern.** `NOT IN` sees NULL episode IDs from movie views and can suppress all results. Record its baseline result and preserve the required Phase 3 query; any corrected version belongs in the optimized-query deliverable with the result difference explained.
-6. **W04 and W05 are likely the heaviest writes.** W04 inserts invoices for many accounts; W05 checks invoice status and billing period while updating accounts.
+## 3. Query Execution Plan Analysis
 
-After running the benchmark, replace the em dashes with measured values, update the scan notes from the actual plans, and revise the observations to describe measured results.
+### Read Queries
+
+| Query | Observed Scan Type | Performance Explanation |
+|---|---|---|
+| R01 | Sequential Scan on viewing_activity; Index Scan on titles | Filtering viewing activity by profile and completion status requires scanning the activity table. |
+| R02 | Index Scan on episodes | The composite index efficiently locates episodes for the requested series. |
+| R03 | Sequential Scan on viewing_activity; Index Scan on titles | The date-based viewing filter scans activity records before grouping viewers by title. |
+| R04 | Sequential Scan on title_genres; Index Scans on genres and titles | The genre mapping is scanned, while indexed lookups retrieve matching genres and titles. |
+| R05 | Sequential Scan on titles | The leading wildcard in `ILIKE '%love%'` prevents an ordinary B-tree index from efficiently supporting the search. |
+| R06 | Index Scans on my_list and titles | Primary-key and composite-key lookups make this profile-specific query efficient. |
+| R07 | Index Scan on episodes | The composite episode index efficiently finds the next episode. |
+| R08 | Sequential Scan on viewing_activity | The query processes viewing records and groups them by profile, title, and date. |
+| R09 | Sequential Scans on viewing_activity, title_genres, and genres | Multiple joins and grouping across viewing records make this aggregation expensive. |
+| R10 | Sequential Scan on accounts | Applying `LOWER(email)` requires evaluating the expression for account records without a matching functional index. |
+| R11 | Sequential Scans on accounts and invoices | The query joins two tables and filters invoices by status and billing period. |
+| R12 | Sequential Scan on accounts | Cancellation filtering and monthly aggregation require examining account records. |
+| R13 | Index Scan on episodes; Sequential Scan on viewing_activity | The episode lookup is indexed, but the `NOT IN` subquery scans viewing activity to identify unwatched episodes. |
+| R14 | Sequential Scans on viewing_activity, profiles, and titles | Multiple joins and maturity-rating comparisons require processing a large number of viewing records. |
+| R15 | Sequential Scans on accounts and plans | Active accounts are joined with plans and aggregated to calculate monthly revenue. |
+| R16 | Sequential Scans on viewing_activity, profiles, accounts, and plans | Multiple joins and grouping by account and hour across viewing activity create substantial processing overhead. |
+| R17 | Sequential Scans on ratings and titles | All ratings are joined with titles and grouped by original-content status. |
+| R18 | Sequential Scan on viewing_activity | Date filtering, device grouping, and duration aggregation require processing viewing records. |
+| R19 | Sequential Scans on titles and viewing_activity | Correlated subqueries calculate total views and latest viewing time for each original title, repeatedly scanning viewing activity. |
+| R20 | Sequential Scans on my_list and titles | The query filters list additions by date, joins titles, and aggregates the results. |
+| R21 | Sequential Scan on accounts | Accounts are filtered by status and billing date, then sorted. |
+| R22 | Sequential Scan on titles | The leaving-date filter is evaluated across titles without an index supporting the condition. |
+| R23 | Sequential Scan on viewing_activity | Retrieving a deep page using `OFFSET 150000` requires processing and skipping a large number of rows. |
+| R24 | Sequential Scan on profiles | Profiles are filtered by account ID and sorted by creation date. |
+| R25 | Sequential Scan on title_genres; Index Only Scan on title_genres | The self-join uses the primary-key index for one side, while the other side scans the genre mapping records. |
+
+### Write Queries
+
+| Query | Observed Scan Type | Performance Explanation |
+|---|---|---|
+| W01 | Index Scan on episodes | The insert uses an indexed lookup to find the episode before inserting the viewing record. |
+| W02 | No scan | The insert uses explicitly supplied values with conflict handling, so no source-table scan is needed. |
+| W03 | Index Scans on plans and accounts | Indexed lookups find the STANDARD plan and the target account for the update. |
+| W04 | Sequential Scans on accounts and plans | The bulk invoice insert processes all active accounts and joins their plans. |
+| W05 | Sequential Scans on accounts and invoices | The update checks active accounts against failed invoices using an `EXISTS` condition. |
+
+## 4. Key Baseline Observations
+
+- R19 is the slowest query, with an average execution time of **6109.484 ms**. Its correlated subqueries repeatedly access the viewing activity table.
+- W04 is the slowest write query, averaging **136.336 ms**, because it generates invoices for all active accounts.
+- R16 takes **119.762 ms** due to multiple joins and grouping over viewing activity.
+- R23 takes **42.755 ms**, with deep pagination requiring a large offset.
+- R02, R06, and R07 are among the fastest queries because they use existing indexes effectively.
+- Several queries use sequential scans, indicating opportunities for indexing and query optimization in the next phase.
+
+## 5. Benchmark Artifacts
+
+The benchmark generated the following files:
+
+- `benchmarks/results/baseline/summary.csv` — average, median, minimum, maximum execution times and observed scan nodes.
+- `benchmarks/results/baseline/R01.txt` through `R25.txt` — raw execution plans for all three runs of each read query.
+- `benchmarks/results/baseline/W01.txt` through `W05.txt` — raw execution plans for all three runs of each write query.
+
+These results will serve as the baseline for comparing query performance after optimization in Phase 4.

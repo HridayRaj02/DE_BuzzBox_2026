@@ -1,0 +1,31 @@
+query_id,type,avg_ms,median_ms,min_ms,max_ms,scan_nodes
+R01,READ,9.348,7.442,6.363,14.240,Seq Scan on viewing_activity | Index Scan using titles_pkey on titles
+R02,READ,0.068,0.066,0.039,0.098,Index Scan using episodes_title_id_season_no_episode_no_key on episodes
+R03,READ,6.686,7.230,5.279,7.549,Seq Scan on viewing_activity | Index Scan using titles_pkey on titles
+R04,READ,0.559,0.554,0.528,0.596,Seq Scan on title_genres | Index Scan using genres_genre_name_key on genres | Index Scan using titles_pkey on titles
+R05,READ,0.603,0.605,0.590,0.613,Seq Scan on titles
+R06,READ,0.052,0.052,0.051,0.053,Index Scan using my_list_pkey on my_list | Index Scan using titles_pkey on titles
+R07,READ,0.019,0.019,0.018,0.020,Index Scan using episodes_title_id_season_no_episode_no_key on episodes
+R08,READ,7.485,7.516,7.368,7.571,Seq Scan on viewing_activity
+R09,READ,24.589,24.592,23.763,25.411,Seq Scan on viewing_activity | Seq Scan on title_genres | Seq Scan on genres
+R10,READ,2.886,2.813,2.796,3.048,Seq Scan on accounts
+R11,READ,6.524,6.352,6.335,6.884,Seq Scan on accounts | Seq Scan on invoices
+R12,READ,1.236,1.209,1.209,1.289,Seq Scan on accounts
+R13,READ,16.628,16.747,16.358,16.778,Index Scan using episodes_title_id_season_no_episode_no_key on episodes | Seq Scan on viewing_activity
+R14,READ,20.267,19.873,19.782,21.147,Seq Scan on viewing_activity | Seq Scan on profiles | Seq Scan on titles
+R15,READ,3.883,3.878,3.854,3.917,Seq Scan on accounts | Seq Scan on plans
+R16,READ,119.762,119.812,119.167,120.308,Seq Scan on viewing_activity | Seq Scan on profiles | Seq Scan on accounts | Seq Scan on plans
+R17,READ,5.138,4.976,4.959,5.479,Seq Scan on ratings | Seq Scan on titles
+R18,READ,25.878,25.898,25.824,25.913,Seq Scan on viewing_activity
+R19,READ,6109.484,6138.327,6014.113,6176.013,Seq Scan on titles | Seq Scan on viewing_activity
+R20,READ,2.627,2.546,2.520,2.815,Seq Scan on my_list | Seq Scan on titles
+R21,READ,1.086,1.095,1.055,1.108,Seq Scan on accounts
+R22,READ,0.152,0.152,0.151,0.154,Seq Scan on titles
+R23,READ,42.755,40.317,38.533,49.416,Seq Scan on viewing_activity
+R24,READ,2.326,2.516,1.875,2.587,Seq Scan on profiles
+R25,READ,0.772,0.684,0.665,0.966,Seq Scan on title_genres | Index Only Scan using title_genres_pkey on title_genres
+W01,WRITE,0.708,0.555,0.406,1.162,Index Scan using episodes_title_id_season_no_episode_no_key on episodes
+W02,WRITE,0.558,0.574,0.444,0.655,(no scan)
+W03,WRITE,0.620,0.265,0.246,1.349,Index Scan using plans_plan_name_key on plans | Index Scan using accounts_pkey on accounts
+W04,WRITE,136.336,134.907,129.128,144.973,Seq Scan on accounts | Seq Scan on plans
+W05,WRITE,14.503,14.584,13.095,15.831,Seq Scan on accounts | Seq Scan on invoices

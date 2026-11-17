@@ -1,0 +1,45 @@
+=== R05 run 1 ===
+Limit  (cost=79.76..79.84 rows=30 width=37) (actual time=0.602..0.604 rows=30.00 loops=1)
+  Buffers: shared hit=39
+  ->  Sort  (cost=79.76..80.29 rows=212 width=37) (actual time=0.602..0.603 rows=30.00 loops=1)
+        Sort Key: release_year DESC
+        Sort Method: top-N heapsort  Memory: 28kB
+        Buffers: shared hit=39
+        ->  Seq Scan on titles  (cost=0.00..73.50 rows=212 width=37) (actual time=0.005..0.582 rows=188.00 loops=1)
+              Filter: ((name)::text ~~* '%love%'::text)
+              Rows Removed by Filter: 2812
+              Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=81
+Planning Time: 0.502 ms
+Execution Time: 0.613 ms
+=== R05 run 2 ===
+Limit  (cost=79.76..79.84 rows=30 width=37) (actual time=0.579..0.581 rows=30.00 loops=1)
+  Buffers: shared hit=39
+  ->  Sort  (cost=79.76..80.29 rows=212 width=37) (actual time=0.579..0.579 rows=30.00 loops=1)
+        Sort Key: release_year DESC
+        Sort Method: top-N heapsort  Memory: 28kB
+        Buffers: shared hit=39
+        ->  Seq Scan on titles  (cost=0.00..73.50 rows=212 width=37) (actual time=0.004..0.557 rows=188.00 loops=1)
+              Filter: ((name)::text ~~* '%love%'::text)
+              Rows Removed by Filter: 2812
+              Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=81
+Planning Time: 0.148 ms
+Execution Time: 0.590 ms
+=== R05 run 3 ===
+Limit  (cost=79.76..79.84 rows=30 width=37) (actual time=0.594..0.596 rows=30.00 loops=1)
+  Buffers: shared hit=39
+  ->  Sort  (cost=79.76..80.29 rows=212 width=37) (actual time=0.594..0.594 rows=30.00 loops=1)
+        Sort Key: release_year DESC
+        Sort Method: top-N heapsort  Memory: 28kB
+        Buffers: shared hit=39
+        ->  Seq Scan on titles  (cost=0.00..73.50 rows=212 width=37) (actual time=0.004..0.573 rows=188.00 loops=1)
+              Filter: ((name)::text ~~* '%love%'::text)
+              Rows Removed by Filter: 2812
+              Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=81
+Planning Time: 0.159 ms
+Execution Time: 0.605 ms
