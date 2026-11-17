@@ -377,7 +377,7 @@ CREATE TABLE invoices (
         CHECK (amount_inr >= 0),
 
     status VARCHAR(10) NOT NULL
-        CHECK (status IN ('PAID', 'FAILED')),
+        CHECK (status IN ('PAID', 'FAILED', 'REFUNDED')),
 
     paid_at TIMESTAMPTZ,
 
@@ -393,7 +393,7 @@ CREATE TABLE invoices (
 
     CONSTRAINT chk_invoice_payment
         CHECK (
-            (status = 'PAID' AND paid_at IS NOT NULL)
+            (status IN ('PAID', 'REFUNDED') AND paid_at IS NOT NULL)
             OR
             (status = 'FAILED' AND paid_at IS NULL)
         ),

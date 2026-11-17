@@ -115,5 +115,5 @@ AND maturity_limit NOT IN ('U', 'UA7');
 SELECT 'IC5: invoices with invalid payment details' AS check_name,
 count(*) AS violations
 FROM invoices
-WHERE (status = 'PAID' AND paid_at IS NULL)
+WHERE (status IN ('PAID', 'REFUNDED') AND paid_at IS NULL)
 OR (status = 'FAILED' AND paid_at IS NOT NULL);
