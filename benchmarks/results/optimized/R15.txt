@@ -1,0 +1,75 @@
+=== R15 run 1 ===
+Sort  (cost=940.35..940.36 rows=4 width=47) (actual time=3.796..3.797 rows=4.00 loops=1)
+  Sort Key: (sum(p.monthly_price_inr)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=356
+  ->  HashAggregate  (cost=940.26..940.31 rows=4 width=47) (actual time=3.788..3.789 rows=4.00 loops=1)
+        Group Key: p.plan_name
+        Batches: 1  Memory Usage: 32kB
+        Buffers: shared hit=353
+        ->  Hash Join  (cost=1.09..780.64 rows=21282 width=12) (actual time=0.011..2.383 rows=21282.00 loops=1)
+              Hash Cond: (a.plan_id = p.plan_id)
+              Buffers: shared hit=353
+              ->  Seq Scan on accounts a  (cost=0.00..664.50 rows=21282 width=2) (actual time=0.004..1.233 rows=21282.00 loops=1)
+                    Filter: ((status)::text = 'ACTIVE'::text)
+                    Rows Removed by Filter: 3718
+                    Buffers: shared hit=352
+              ->  Hash  (cost=1.04..1.04 rows=4 width=14) (actual time=0.005..0.005 rows=4.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on plans p  (cost=0.00..1.04 rows=4 width=14) (actual time=0.001..0.001 rows=4.00 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=339
+Planning Time: 0.450 ms
+Execution Time: 3.821 ms
+=== R15 run 2 ===
+Sort  (cost=940.35..940.36 rows=4 width=47) (actual time=4.308..4.308 rows=4.00 loops=1)
+  Sort Key: (sum(p.monthly_price_inr)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=356
+  ->  HashAggregate  (cost=940.26..940.31 rows=4 width=47) (actual time=4.299..4.300 rows=4.00 loops=1)
+        Group Key: p.plan_name
+        Batches: 1  Memory Usage: 32kB
+        Buffers: shared hit=353
+        ->  Hash Join  (cost=1.09..780.64 rows=21282 width=12) (actual time=0.012..2.646 rows=21282.00 loops=1)
+              Hash Cond: (a.plan_id = p.plan_id)
+              Buffers: shared hit=353
+              ->  Seq Scan on accounts a  (cost=0.00..664.50 rows=21282 width=2) (actual time=0.004..1.365 rows=21282.00 loops=1)
+                    Filter: ((status)::text = 'ACTIVE'::text)
+                    Rows Removed by Filter: 3718
+                    Buffers: shared hit=352
+              ->  Hash  (cost=1.04..1.04 rows=4 width=14) (actual time=0.005..0.005 rows=4.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on plans p  (cost=0.00..1.04 rows=4 width=14) (actual time=0.001..0.001 rows=4.00 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=339
+Planning Time: 0.455 ms
+Execution Time: 4.333 ms
+=== R15 run 3 ===
+Sort  (cost=940.35..940.36 rows=4 width=47) (actual time=4.066..4.066 rows=4.00 loops=1)
+  Sort Key: (sum(p.monthly_price_inr)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=356
+  ->  HashAggregate  (cost=940.26..940.31 rows=4 width=47) (actual time=4.056..4.058 rows=4.00 loops=1)
+        Group Key: p.plan_name
+        Batches: 1  Memory Usage: 32kB
+        Buffers: shared hit=353
+        ->  Hash Join  (cost=1.09..780.64 rows=21282 width=12) (actual time=0.012..2.515 rows=21282.00 loops=1)
+              Hash Cond: (a.plan_id = p.plan_id)
+              Buffers: shared hit=353
+              ->  Seq Scan on accounts a  (cost=0.00..664.50 rows=21282 width=2) (actual time=0.005..1.305 rows=21282.00 loops=1)
+                    Filter: ((status)::text = 'ACTIVE'::text)
+                    Rows Removed by Filter: 3718
+                    Buffers: shared hit=352
+              ->  Hash  (cost=1.04..1.04 rows=4 width=14) (actual time=0.005..0.005 rows=4.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on plans p  (cost=0.00..1.04 rows=4 width=14) (actual time=0.001..0.001 rows=4.00 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=339
+Planning Time: 0.456 ms
+Execution Time: 4.093 ms

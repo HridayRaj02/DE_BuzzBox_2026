@@ -1,0 +1,48 @@
+=== R13 run 1 ===
+Nested Loop Anti Join  (cost=0.58..154.88 rows=7 width=8) (actual time=0.050..0.053 rows=8.00 loops=1)
+  Buffers: shared hit=85 read=3
+  ->  Index Scan using uq_episode_position on episodes e  (cost=0.29..38.35 rows=18 width=8) (actual time=0.006..0.008 rows=31.00 loops=1)
+        Index Cond: (title_id = 2523)
+        Index Searches: 1
+        Buffers: shared hit=3
+  ->  Index Only Scan using viewing_activity_episode_idx on viewing_activity v  (cost=0.29..34.87 rows=8 width=4) (actual time=0.001..0.001 rows=0.74 loops=31)
+        Index Cond: (episode_id = e.episode_id)
+        Heap Fetches: 23
+        Index Searches: 31
+        Buffers: shared hit=82 read=3
+Planning:
+  Buffers: shared hit=358
+Planning Time: 0.468 ms
+Execution Time: 0.071 ms
+=== R13 run 2 ===
+Nested Loop Anti Join  (cost=0.58..154.88 rows=7 width=8) (actual time=0.037..0.040 rows=8.00 loops=1)
+  Buffers: shared hit=88
+  ->  Index Scan using uq_episode_position on episodes e  (cost=0.29..38.35 rows=18 width=8) (actual time=0.006..0.007 rows=31.00 loops=1)
+        Index Cond: (title_id = 2523)
+        Index Searches: 1
+        Buffers: shared hit=3
+  ->  Index Only Scan using viewing_activity_episode_idx on viewing_activity v  (cost=0.29..34.87 rows=8 width=4) (actual time=0.001..0.001 rows=0.74 loops=31)
+        Index Cond: (episode_id = e.episode_id)
+        Heap Fetches: 23
+        Index Searches: 31
+        Buffers: shared hit=85
+Planning:
+  Buffers: shared hit=358
+Planning Time: 0.489 ms
+Execution Time: 0.059 ms
+=== R13 run 3 ===
+Nested Loop Anti Join  (cost=0.58..154.88 rows=7 width=8) (actual time=0.036..0.038 rows=8.00 loops=1)
+  Buffers: shared hit=88
+  ->  Index Scan using uq_episode_position on episodes e  (cost=0.29..38.35 rows=18 width=8) (actual time=0.006..0.007 rows=31.00 loops=1)
+        Index Cond: (title_id = 2523)
+        Index Searches: 1
+        Buffers: shared hit=3
+  ->  Index Only Scan using viewing_activity_episode_idx on viewing_activity v  (cost=0.29..34.87 rows=8 width=4) (actual time=0.001..0.001 rows=0.74 loops=31)
+        Index Cond: (episode_id = e.episode_id)
+        Heap Fetches: 23
+        Index Searches: 31
+        Buffers: shared hit=85
+Planning:
+  Buffers: shared hit=358
+Planning Time: 0.474 ms
+Execution Time: 0.057 ms

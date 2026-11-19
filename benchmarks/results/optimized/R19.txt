@@ -1,0 +1,96 @@
+=== R19 run 1 ===
+Sort  (cost=6399.73..6401.26 rows=610 width=45) (actual time=4.236..4.248 rows=610.00 loops=1)
+  Sort Key: ((SubPlan 1)) DESC
+  Sort Method: quicksort  Memory: 63kB
+  Buffers: shared hit=3400 read=490
+  ->  Seq Scan on titles t  (cost=0.00..6371.51 rows=610 width=45) (actual time=0.037..4.178 rows=610.00 loops=1)
+        Filter: is_netflix_original
+        Rows Removed by Filter: 2390
+        Buffers: shared hit=3397 read=490
+        SubPlan 1
+          ->  Aggregate  (cost=9.76..9.77 rows=1 width=8) (actual time=0.005..0.005 rows=1.00 loops=610)
+                Buffers: shared hit=1519 read=490
+                ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v  (cost=0.42..9.59 rows=67 width=0) (actual time=0.002..0.004 rows=65.25 loops=610)
+                      Index Cond: (title_id = t.title_id)
+                      Heap Fetches: 38
+                      Index Searches: 610
+                      Buffers: shared hit=1519 read=490
+        SubPlan 3
+          ->  Result  (cost=0.56..0.57 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                Buffers: shared hit=1842
+                InitPlan 2
+                  ->  Limit  (cost=0.42..0.56 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                        Buffers: shared hit=1842
+                        ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v_1  (cost=0.42..9.59 rows=67 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                              Index Cond: (title_id = t.title_id)
+                              Heap Fetches: 11
+                              Index Searches: 610
+                              Buffers: shared hit=1842
+Planning:
+  Buffers: shared hit=292
+Planning Time: 0.450 ms
+Execution Time: 4.291 ms
+=== R19 run 2 ===
+Sort  (cost=6399.73..6401.26 rows=610 width=45) (actual time=3.513..3.524 rows=610.00 loops=1)
+  Sort Key: ((SubPlan 1)) DESC
+  Sort Method: quicksort  Memory: 63kB
+  Buffers: shared hit=3890
+  ->  Seq Scan on titles t  (cost=0.00..6371.51 rows=610 width=45) (actual time=0.038..3.462 rows=610.00 loops=1)
+        Filter: is_netflix_original
+        Rows Removed by Filter: 2390
+        Buffers: shared hit=3887
+        SubPlan 1
+          ->  Aggregate  (cost=9.76..9.77 rows=1 width=8) (actual time=0.004..0.004 rows=1.00 loops=610)
+                Buffers: shared hit=2009
+                ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v  (cost=0.42..9.59 rows=67 width=0) (actual time=0.001..0.003 rows=65.25 loops=610)
+                      Index Cond: (title_id = t.title_id)
+                      Heap Fetches: 38
+                      Index Searches: 610
+                      Buffers: shared hit=2009
+        SubPlan 3
+          ->  Result  (cost=0.56..0.57 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                Buffers: shared hit=1842
+                InitPlan 2
+                  ->  Limit  (cost=0.42..0.56 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                        Buffers: shared hit=1842
+                        ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v_1  (cost=0.42..9.59 rows=67 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                              Index Cond: (title_id = t.title_id)
+                              Heap Fetches: 11
+                              Index Searches: 610
+                              Buffers: shared hit=1842
+Planning:
+  Buffers: shared hit=302
+Planning Time: 0.464 ms
+Execution Time: 3.564 ms
+=== R19 run 3 ===
+Sort  (cost=6399.73..6401.26 rows=610 width=45) (actual time=3.758..3.768 rows=610.00 loops=1)
+  Sort Key: ((SubPlan 1)) DESC
+  Sort Method: quicksort  Memory: 63kB
+  Buffers: shared hit=3890
+  ->  Seq Scan on titles t  (cost=0.00..6371.51 rows=610 width=45) (actual time=0.035..3.707 rows=610.00 loops=1)
+        Filter: is_netflix_original
+        Rows Removed by Filter: 2390
+        Buffers: shared hit=3887
+        SubPlan 1
+          ->  Aggregate  (cost=9.76..9.77 rows=1 width=8) (actual time=0.005..0.005 rows=1.00 loops=610)
+                Buffers: shared hit=2009
+                ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v  (cost=0.42..9.59 rows=67 width=0) (actual time=0.002..0.003 rows=65.25 loops=610)
+                      Index Cond: (title_id = t.title_id)
+                      Heap Fetches: 38
+                      Index Searches: 610
+                      Buffers: shared hit=2009
+        SubPlan 3
+          ->  Result  (cost=0.56..0.57 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                Buffers: shared hit=1842
+                InitPlan 2
+                  ->  Limit  (cost=0.42..0.56 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                        Buffers: shared hit=1842
+                        ->  Index Only Scan using viewing_activity_title_started_idx on viewing_activity v_1  (cost=0.42..9.59 rows=67 width=8) (actual time=0.001..0.001 rows=1.00 loops=610)
+                              Index Cond: (title_id = t.title_id)
+                              Heap Fetches: 11
+                              Index Searches: 610
+                              Buffers: shared hit=1842
+Planning:
+  Buffers: shared hit=302
+Planning Time: 0.460 ms
+Execution Time: 3.815 ms

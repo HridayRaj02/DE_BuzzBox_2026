@@ -1,0 +1,30 @@
+=== R23 run 1 ===
+Limit  (cost=5102.95..5103.80 rows=25 width=24) (actual time=13.175..13.178 rows=25.00 loops=1)
+  Buffers: shared hit=13581 read=227
+  ->  Index Scan using viewing_activity_started_idx on viewing_activity  (cost=0.42..6817.44 rows=200401 width=24) (actual time=0.007..10.729 rows=150025.00 loops=1)
+        Index Searches: 1
+        Buffers: shared hit=13581 read=227
+Planning:
+  Buffers: shared hit=184
+Planning Time: 0.297 ms
+Execution Time: 13.189 ms
+=== R23 run 2 ===
+Limit  (cost=5102.95..5103.80 rows=25 width=24) (actual time=12.938..12.940 rows=25.00 loops=1)
+  Buffers: shared hit=13808
+  ->  Index Scan using viewing_activity_started_idx on viewing_activity  (cost=0.42..6817.44 rows=200401 width=24) (actual time=0.007..10.467 rows=150025.00 loops=1)
+        Index Searches: 1
+        Buffers: shared hit=13808
+Planning:
+  Buffers: shared hit=184
+Planning Time: 0.274 ms
+Execution Time: 12.951 ms
+=== R23 run 3 ===
+Limit  (cost=5102.95..5103.80 rows=25 width=24) (actual time=12.626..12.628 rows=25.00 loops=1)
+  Buffers: shared hit=13808
+  ->  Index Scan using viewing_activity_started_idx on viewing_activity  (cost=0.42..6817.44 rows=200401 width=24) (actual time=0.007..10.230 rows=150025.00 loops=1)
+        Index Searches: 1
+        Buffers: shared hit=13808
+Planning:
+  Buffers: shared hit=184
+Planning Time: 0.289 ms
+Execution Time: 12.639 ms

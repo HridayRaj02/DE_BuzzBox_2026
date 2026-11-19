@@ -1,0 +1,39 @@
+=== R10 run 1 ===
+Bitmap Heap Scan on accounts  (cost=5.38..258.28 rows=125 width=13) (actual time=0.015..0.015 rows=1.00 loops=1)
+  Recheck Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+  Heap Blocks: exact=1
+  Buffers: shared hit=1 read=3
+  ->  Bitmap Index Scan on accounts_lower_email_idx  (cost=0.00..5.35 rows=125 width=0) (actual time=0.011..0.011 rows=1.00 loops=1)
+        Index Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+        Index Searches: 1
+        Buffers: shared read=3
+Planning:
+  Buffers: shared hit=142 read=3
+Planning Time: 0.324 ms
+Execution Time: 0.033 ms
+=== R10 run 2 ===
+Bitmap Heap Scan on accounts  (cost=5.38..258.28 rows=125 width=13) (actual time=0.009..0.009 rows=1.00 loops=1)
+  Recheck Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+  Heap Blocks: exact=1
+  Buffers: shared hit=4
+  ->  Bitmap Index Scan on accounts_lower_email_idx  (cost=0.00..5.35 rows=125 width=0) (actual time=0.006..0.006 rows=1.00 loops=1)
+        Index Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+        Index Searches: 1
+        Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=145
+Planning Time: 0.251 ms
+Execution Time: 0.026 ms
+=== R10 run 3 ===
+Bitmap Heap Scan on accounts  (cost=5.38..258.28 rows=125 width=13) (actual time=0.009..0.009 rows=1.00 loops=1)
+  Recheck Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+  Heap Blocks: exact=1
+  Buffers: shared hit=4
+  ->  Bitmap Index Scan on accounts_lower_email_idx  (cost=0.00..5.35 rows=125 width=0) (actual time=0.006..0.006 rows=1.00 loops=1)
+        Index Cond: (lower((email)::text) = 'arjun.chopra1409@yahoo.com'::text)
+        Index Searches: 1
+        Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=145
+Planning Time: 0.251 ms
+Execution Time: 0.025 ms

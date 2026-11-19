@@ -1,0 +1,48 @@
+=== R06 run 1 ===
+Nested Loop  (cost=0.70..95.32 rows=10 width=43) (actual time=0.016..0.027 rows=6.00 loops=1)
+  Buffers: shared hit=19 read=3
+  ->  Index Only Scan using my_list_profile_added_idx on my_list m  (cost=0.41..24.34 rows=10 width=12) (actual time=0.011..0.012 rows=6.00 loops=1)
+        Index Cond: (profile_id = 7393)
+        Heap Fetches: 6
+        Index Searches: 1
+        Buffers: shared hit=1 read=3
+  ->  Index Scan using titles_pkey on titles t  (cost=0.28..7.10 rows=1 width=35) (actual time=0.002..0.002 rows=1.00 loops=6)
+        Index Cond: (title_id = m.title_id)
+        Index Searches: 6
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=320 read=2
+Planning Time: 0.465 ms
+Execution Time: 0.049 ms
+=== R06 run 2 ===
+Nested Loop  (cost=0.70..95.32 rows=10 width=43) (actual time=0.011..0.021 rows=6.00 loops=1)
+  Buffers: shared hit=22
+  ->  Index Only Scan using my_list_profile_added_idx on my_list m  (cost=0.41..24.34 rows=10 width=12) (actual time=0.006..0.007 rows=6.00 loops=1)
+        Index Cond: (profile_id = 7393)
+        Heap Fetches: 6
+        Index Searches: 1
+        Buffers: shared hit=4
+  ->  Index Scan using titles_pkey on titles t  (cost=0.28..7.10 rows=1 width=35) (actual time=0.002..0.002 rows=1.00 loops=6)
+        Index Cond: (title_id = m.title_id)
+        Index Searches: 6
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=322
+Planning Time: 0.406 ms
+Execution Time: 0.039 ms
+=== R06 run 3 ===
+Nested Loop  (cost=0.70..95.32 rows=10 width=43) (actual time=0.012..0.024 rows=6.00 loops=1)
+  Buffers: shared hit=22
+  ->  Index Only Scan using my_list_profile_added_idx on my_list m  (cost=0.41..24.34 rows=10 width=12) (actual time=0.007..0.008 rows=6.00 loops=1)
+        Index Cond: (profile_id = 7393)
+        Heap Fetches: 6
+        Index Searches: 1
+        Buffers: shared hit=4
+  ->  Index Scan using titles_pkey on titles t  (cost=0.28..7.10 rows=1 width=35) (actual time=0.002..0.002 rows=1.00 loops=6)
+        Index Cond: (title_id = m.title_id)
+        Index Searches: 6
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=322
+Planning Time: 0.469 ms
+Execution Time: 0.045 ms

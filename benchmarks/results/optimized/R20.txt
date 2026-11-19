@@ -1,0 +1,84 @@
+=== R20 run 1 ===
+Limit  (cost=361.81..361.83 rows=10 width=37) (actual time=1.124..1.125 rows=10.00 loops=1)
+  Buffers: shared hit=42 read=12
+  ->  Sort  (cost=361.81..370.15 rows=3337 width=37) (actual time=1.124..1.124 rows=10.00 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        Buffers: shared hit=42 read=12
+        ->  HashAggregate  (cost=256.33..289.70 rows=3337 width=37) (actual time=0.940..1.025 rows=1917.00 loops=1)
+              Group Key: m.title_id, t.name
+              Batches: 1  Memory Usage: 217kB
+              Buffers: shared hit=39 read=12
+              ->  Hash Join  (cost=103.79..231.30 rows=3337 width=29) (actual time=0.293..0.638 rows=3328.00 loops=1)
+                    Hash Cond: (m.title_id = t.title_id)
+                    Buffers: shared hit=39 read=12
+                    ->  Index Only Scan using my_list_added_title_idx on my_list m  (cost=0.29..119.03 rows=3337 width=4) (actual time=0.007..0.122 rows=3328.00 loops=1)
+                          Index Cond: ((added_at >= '2026-06-01 00:00:00+05:30'::timestamp with time zone) AND (added_at < '2026-07-01 00:00:00+05:30'::timestamp with time zone))
+                          Heap Fetches: 0
+                          Index Searches: 1
+                          Buffers: shared hit=3 read=12
+                    ->  Hash  (cost=66.00..66.00 rows=3000 width=29) (actual time=0.277..0.277 rows=3000.00 loops=1)
+                          Buckets: 4096  Batches: 1  Memory Usage: 218kB
+                          Buffers: shared hit=36
+                          ->  Seq Scan on titles t  (cost=0.00..66.00 rows=3000 width=29) (actual time=0.005..0.126 rows=3000.00 loops=1)
+                                Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=270 read=2
+Planning Time: 0.467 ms
+Execution Time: 1.157 ms
+=== R20 run 2 ===
+Limit  (cost=361.81..361.83 rows=10 width=37) (actual time=1.260..1.261 rows=10.00 loops=1)
+  Buffers: shared hit=54
+  ->  Sort  (cost=361.81..370.15 rows=3337 width=37) (actual time=1.259..1.260 rows=10.00 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        Buffers: shared hit=54
+        ->  HashAggregate  (cost=256.33..289.70 rows=3337 width=37) (actual time=1.002..1.106 rows=1917.00 loops=1)
+              Group Key: m.title_id, t.name
+              Batches: 1  Memory Usage: 217kB
+              Buffers: shared hit=51
+              ->  Hash Join  (cost=103.79..231.30 rows=3337 width=29) (actual time=0.318..0.676 rows=3328.00 loops=1)
+                    Hash Cond: (m.title_id = t.title_id)
+                    Buffers: shared hit=51
+                    ->  Index Only Scan using my_list_added_title_idx on my_list m  (cost=0.29..119.03 rows=3337 width=4) (actual time=0.007..0.117 rows=3328.00 loops=1)
+                          Index Cond: ((added_at >= '2026-06-01 00:00:00+05:30'::timestamp with time zone) AND (added_at < '2026-07-01 00:00:00+05:30'::timestamp with time zone))
+                          Heap Fetches: 0
+                          Index Searches: 1
+                          Buffers: shared hit=15
+                    ->  Hash  (cost=66.00..66.00 rows=3000 width=29) (actual time=0.303..0.303 rows=3000.00 loops=1)
+                          Buckets: 4096  Batches: 1  Memory Usage: 218kB
+                          Buffers: shared hit=36
+                          ->  Seq Scan on titles t  (cost=0.00..66.00 rows=3000 width=29) (actual time=0.005..0.136 rows=3000.00 loops=1)
+                                Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=272
+Planning Time: 0.540 ms
+Execution Time: 1.301 ms
+=== R20 run 3 ===
+Limit  (cost=361.81..361.83 rows=10 width=37) (actual time=1.206..1.208 rows=10.00 loops=1)
+  Buffers: shared hit=54
+  ->  Sort  (cost=361.81..370.15 rows=3337 width=37) (actual time=1.206..1.206 rows=10.00 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: top-N heapsort  Memory: 25kB
+        Buffers: shared hit=54
+        ->  HashAggregate  (cost=256.33..289.70 rows=3337 width=37) (actual time=0.979..1.079 rows=1917.00 loops=1)
+              Group Key: m.title_id, t.name
+              Batches: 1  Memory Usage: 217kB
+              Buffers: shared hit=51
+              ->  Hash Join  (cost=103.79..231.30 rows=3337 width=29) (actual time=0.323..0.661 rows=3328.00 loops=1)
+                    Hash Cond: (m.title_id = t.title_id)
+                    Buffers: shared hit=51
+                    ->  Index Only Scan using my_list_added_title_idx on my_list m  (cost=0.29..119.03 rows=3337 width=4) (actual time=0.007..0.121 rows=3328.00 loops=1)
+                          Index Cond: ((added_at >= '2026-06-01 00:00:00+05:30'::timestamp with time zone) AND (added_at < '2026-07-01 00:00:00+05:30'::timestamp with time zone))
+                          Heap Fetches: 0
+                          Index Searches: 1
+                          Buffers: shared hit=15
+                    ->  Hash  (cost=66.00..66.00 rows=3000 width=29) (actual time=0.307..0.307 rows=3000.00 loops=1)
+                          Buckets: 4096  Batches: 1  Memory Usage: 218kB
+                          Buffers: shared hit=36
+                          ->  Seq Scan on titles t  (cost=0.00..66.00 rows=3000 width=29) (actual time=0.005..0.134 rows=3000.00 loops=1)
+                                Buffers: shared hit=36
+Planning:
+  Buffers: shared hit=272
+Planning Time: 0.507 ms
+Execution Time: 1.241 ms
