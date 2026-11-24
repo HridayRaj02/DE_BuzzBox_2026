@@ -1,127 +1,131 @@
 # Phase 4 – Optimization Report
 
-## 1. Environment and measurement method
+## 1. Environment and method
 
 | Item | Value |
 |---|---|
-| Project | Netflix Movie & Series Streaming Database |
-| Team | T0107 |
-| Database engine | PostgreSQL 18 (from `team.json`) |
-| Database/schema | `netflix_bench` / `netflix` (as used by the workload and benchmark command) |
-| Machine | MacBook Pro (from `team.json`) |
-| Dataset | Seed data: 25,000 accounts; 75,000 profiles; 3,000 titles; 20,000 episodes; 200,401 viewing records; 33,900 ratings; 59,992 My List rows; 133,057 invoices |
-| Measurement | `EXPLAIN (ANALYZE, BUFFERS)`, 3 runs per query; average reported |
-| Write safety | The benchmark script executes write queries inside `BEGIN` / `ROLLBACK` |
+| Project / team | Netflix Movie & Series Streaming Database / T0107 |
+| Database engine | PostgreSQL 18 (`team.json`) |
+| Database/schema | `netflix_bench` / `netflix` |
+| Machine | MacBook Pro (`team.json`) |
+| Dataset | Seed data: 200,401 viewing records; 133,057 invoices; 75,000 profiles; 25,000 accounts; 20,000 episodes; 59,992 My List rows; 33,900 ratings; 5,963 title-genre links; 3,000 titles; 15 genres; 4 plans |
+| Method | Three runs per query with `EXPLAIN (ANALYZE, BUFFERS)`; average reported |
+| Writes | The benchmark script wraps W01–W05 in `BEGIN` / `ROLLBACK` |
 
-**Status:** The project has a baseline summary and raw plans. `benchmarks/results/optimized/summary.csv` is empty, so after timings, speed-ups, optimized-plan changes, correctness comparisons, index sizes, and write overhead are not yet measured. The figures in the attached example are from another run and are not copied here.
+Baseline and optimized summaries and 30 raw plans for each run set are present under `benchmarks/results/baseline/` and `benchmarks/results/optimized/`. The comparisons below use the averages in those CSV files.
 
-## 2. Baseline findings
+## 2. Baseline bottlenecks
 
-The baseline average times sum to **6,563.538 ms** across all 30 queries. The most urgent bottleneck is R19 at **6,109.484 ms**: its correlated subqueries repeatedly access viewing activity by title. R16 takes **119.762 ms** for a broad grouping by account and hour; R23 takes **42.755 ms** for a deep page using `OFFSET 150000`. R09 and R18 take **24.589 ms** and **25.878 ms** for date-based analytics.
+The baseline averages sum to **6,563.538 ms**. R19 dominates at **6,109.484 ms**: its correlated count and latest-view subqueries repeatedly scan viewing activity for each Original. Other expensive reads are R16 (**119.762 ms**) and R23 (**42.755 ms**). R09 and R18 take about 25 ms each.
 
-The baseline plan summary shows sequential scans on `viewing_activity` for R01, R03, R08, R09, R13, R14, R16, R18, R19, and R23. R10 scans accounts for `lower(email)`, while R24 scans profiles to find one account’s profiles. Some small-table scans are already fast: R22 takes 0.152 ms and R25 takes 0.772 ms.
+The baseline plans show sequential scans on `viewing_activity` for R01, R03, R08, R09, R13, R14, R16, R18, R19, and R23. R10 scans accounts for `lower(email)`, and R24 scans profiles for an account filter. Some scans are already fast on the seed dataset, including R22 (0.152 ms) and R25 (0.772 ms).
 
-R13’s original `NOT IN` query is vulnerable to NULLs from viewing records without an episode ID. The optimized query uses `NOT EXISTS` to find unwatched episodes. This is a correctness fix that intentionally changes the original result; compare and report the actual rows returned after running it.
+R13’s original `NOT IN` may return no rows when the subquery contains NULL episode IDs. The optimized query uses `NOT EXISTS`. This is a correctness fix with an intended result change; the returned rows still need an explicit comparison recorded in the deliverable.
 
 ## 3. Index design (`sql/05_indexes.sql`)
 
-The index script defines 18 secondary indexes and enables `pg_trgm` for R05. These are candidates based on the baseline predicates and plans. Confirm their use, storage, and effect on writes with the optimized run.
+The index script creates 18 secondary indexes and enables `pg_trgm` for substring search. The actual optimized plans show use of the activity, title-search, account, invoice, profile, genre, and My List indexes. Broad analytics still scan substantial data.
 
-| Index | Query | Reason |
+| Index | Main query | Purpose |
 |---|---|---|
-| `viewing_activity_profile_unfinished_idx` (partial) | R01 | Profile and title ordering for unfinished views; includes only `NOT completed` rows. |
-| `viewing_activity_profile_started_idx` | R14 | Potential profile-to-viewing probes when starting from kids profiles; verify in the plan. |
-| `viewing_activity_title_started_idx` | R19 | Supports title-specific counts and latest-view lookups. |
-| `viewing_activity_episode_idx` (partial) | R13 | Supports the anti-join by episode ID and excludes NULL episode IDs. |
-| `viewing_activity_started_idx` | R03, R08, R09, R18, R23 | Timestamp ranges and newest-first activity order; broad analytics may still favor a sequential scan. |
-| `titles_maturity_added_idx` | R04 | Maturity filter and recent-addition ordering. |
-| `titles_leaving_idx` (partial) | R22 | Finds titles with a scheduled leaving date. |
-| `titles_name_trgm_idx` (GIN, `pg_trgm`) | R05 | Supports `ILIKE '%love%'`, which a normal B-tree cannot efficiently serve. |
-| `title_genres_genre_idx` | R04, R09, R25 | Reverse lookup by genre; the primary key begins with `title_id`. |
-| `accounts_lower_email_idx` (expression) | R10 | Matches the query’s `lower(email)` expression. |
-| `accounts_status_next_billing_idx` | R21 and selective status filters | Matches status and billing-date filters; broad account queries may still scan. |
-| `accounts_cancelled_idx` (partial) | R12 | Cancellation dates for cancelled accounts; used with the rewritten date range. |
-| `profiles_account_created_idx` | R24 | Finds one account’s profiles in creation order. |
-| `profiles_kids_idx` (partial) | R14 | Potentially enumerates kids profiles before activity probes; verify the chosen plan. |
-| `invoices_status_period_idx` | R11 | Failed-invoice lookup by status and billing period. |
-| `invoices_account_period_status_idx` | W05 | Matches the account-correlated invoice existence check. |
-| `my_list_profile_added_idx` | R06 | Finds one profile’s list in most-recently-added order. |
-| `my_list_added_title_idx` | R20 | Filters additions by date and groups them by title. |
+| `viewing_activity_profile_unfinished_idx` (partial) | R01 | Finds unfinished views for a profile in title/latest order. |
+| `viewing_activity_profile_started_idx` | R14 | Provides a profile-to-viewing access path for kids-profile checks. |
+| `viewing_activity_title_started_idx` | R19 | Supports title-specific count and latest-view lookups. |
+| `viewing_activity_episode_idx` (partial) | R13 | Supports anti-join probes and excludes NULL episode IDs. |
+| `viewing_activity_started_idx` | R03, R08, R09, R18, R23 | Supports timestamp ranges and newest-first activity order. |
+| `titles_maturity_added_idx` | R04 | Maturity filtering and recent-addition ordering. |
+| `titles_leaving_idx` (partial) | R22 | Searches titles with a leaving date. |
+| `titles_name_trgm_idx` (GIN, `pg_trgm`) | R05 | Supports `ILIKE '%love%'`. |
+| `title_genres_genre_idx` | R04, R09, R25 | Adds a lookup path beginning with `genre_id`. |
+| `accounts_lower_email_idx` (expression) | R10 | Matches `lower(email)`. |
+| `accounts_status_next_billing_idx` | R21 | Matches status and due date. |
+| `accounts_cancelled_idx` (partial) | R12 | Indexes dates for cancelled accounts. |
+| `profiles_account_created_idx` | R24 | Finds an account’s profiles in creation order. |
+| `profiles_kids_idx` (partial) | R14 | Finds kids profiles; observed in the optimized plan. |
+| `invoices_status_period_idx` | R11, W05 | Supports status/period invoice lookup; observed for both queries. |
+| `invoices_account_period_status_idx` | W05 | Account-correlated invoice lookup candidate; confirm if planner uses it. |
+| `my_list_profile_added_idx` | R06 | Profile filter and most-recently-added ordering. |
+| `my_list_added_title_idx` | R20 | Filters additions by date and groups by title. |
 
-R17 aggregates all ratings, and a sequential scan may remain the efficient plan; no extra ratings index is created. The index script does not alter the schema or seed data.
+R17 aggregates all ratings, so a sequential scan remains reasonable. The W04 plan scans all active accounts and plans; a low-selectivity status index may not help a bulk billing run.
 
 ## 4. Query rewrites (`sql/06_optimized_queries.sql`)
 
-Four queries are rewritten; the remaining 26 retain their original query logic. R09, R12, and R18 use sargable date ranges. R13 fixes a NULL-related correctness bug.
+Four queries are rewritten; the other 26 retain the original query logic.
 
-| Query | Rewrite | Reason |
+| Query | Change | Reason |
 |---|---|---|
-| R09 | `EXTRACT(YEAR FROM started_at) = 2026` → half-open timestamp range for 2026 | Applying `EXTRACT` to the column blocks a normal timestamp index condition. Bounds use the session time zone, like the original year extraction. |
-| R12 | `EXTRACT(YEAR FROM cancelled_on) = 2026` → `cancelled_on >= DATE '2026-01-01' AND cancelled_on < DATE '2027-01-01'` | Lets the cancellation-date index support a range condition. |
-| R13 | `NOT IN (subquery)` → correlated `NOT EXISTS` | Avoids NULL propagation from movie views with no episode ID; intended result differs from the faulty original. |
-| R18 | `started_at::date >= '2026-01-01'` → timestamp lower bound | Avoids casting the indexed column; both forms use midnight in the session time zone. |
+| R09 | Year extraction → half-open timestamp range | Makes the timestamp predicate usable as an index condition. |
+| R12 | Year extraction → half-open date range | Makes the cancelled-date filter sargable. |
+| R13 | `NOT IN` → `NOT EXISTS` | Corrects NULL behavior; results intentionally differ from the faulty original. |
+| R18 | Cast of `started_at` to date → timestamp lower bound | Avoids applying a function to the indexed timestamp column. |
 
-Row-count or `EXCEPT` checks for R09, R12, and R18 are pending. For R13, record both the original and corrected results and explain the intended result rather than claiming equivalence.
+The date-range rewrites use midnight in the session time zone to match the original expressions. The benchmark demonstrates their execution times, but row-count or `EXCEPT` comparisons for R09, R12, and R18 are not included in the available artifacts. Record those checks; for R13, document the original and corrected results separately.
 
-## 5. Baseline and optimized timings
+## 5. Before-and-after results
 
-Times are milliseconds. Baseline values are averages from `benchmarks/results/baseline/summary.csv`. Optimized values and speed-ups remain pending because the optimized summary is empty.
+Average execution time in milliseconds. Speed-up is baseline average divided by optimized average; values below 1× indicate a slower optimized run.
 
-| Query | Type | Baseline avg | Optimized avg | Speed-up |
+| Query | Type | Baseline | Optimized | Speed-up |
 |---|---|---:|---:|---:|
-| R01: Continue Watching | READ | 9.348 | — | Pending |
-| R02: Episodes per season | READ | 0.068 | — | Pending |
-| R03: Top titles on 30 June | READ | 6.686 | — | Pending |
-| R04: Kids Comedy row | READ | 0.559 | — | Pending |
-| R05: Search title names | READ | 0.603 | — | Pending |
-| R06: My List | READ | 0.052 | — | Pending |
-| R07: Next episode | READ | 0.019 | — | Pending |
-| R08: Binge sessions | READ | 7.485 | — | Pending |
-| R09: Completion rate per genre | READ | 24.589 | — | Pending |
-| R10: Case-insensitive sign-in | READ | 2.886 | — | Pending |
-| R11: Failed June invoices | READ | 6.524 | — | Pending |
-| R12: Cancellations and tenure | READ | 1.236 | — | Pending |
-| R13: Unwatched episodes | READ | 16.628 | — | Pending |
-| R14: Kids maturity violations | READ | 20.267 | — | Pending |
-| R15: Revenue by plan | READ | 3.883 | — | Pending |
-| R16: Account sharing by hour | READ | 119.762 | — | Pending |
-| R17: Ratings by Original status | READ | 5.138 | — | Pending |
-| R18: Viewing hours by device/month | READ | 25.878 | — | Pending |
-| R19: Original-title view totals | READ | 6,109.484 | — | Pending |
-| R20: Most-added titles | READ | 2.627 | — | Pending |
-| R21: On-hold accounts past due | READ | 1.086 | — | Pending |
-| R22: Titles leaving in July | READ | 0.152 | — | Pending |
-| R23: Activity page 6,001 | READ | 42.755 | — | Pending |
-| R24: Profiles for account 1409 | READ | 2.326 | — | Pending |
-| R25: Similar titles by genre | READ | 0.772 | — | Pending |
-| W01: Insert viewing event | WRITE | 0.708 | — | Pending |
-| W02: Add to My List | WRITE | 0.558 | — | Pending |
-| W03: Change plan | WRITE | 0.620 | — | Pending |
-| W04: Monthly invoice batch | WRITE | 136.336 | — | Pending |
-| W05: Dunning update | WRITE | 14.503 | — | Pending |
-| **Total (30 query averages)** | | **6,563.538** | — | Pending |
+| R01 | READ | 9.348 | 0.037 | 252.65× |
+| R02 | READ | 0.068 | 0.035 | 1.94× |
+| R03 | READ | 6.686 | 0.476 | 14.05× |
+| R04 | READ | 0.559 | 0.368 | 1.52× |
+| R05 | READ | 0.603 | 0.173 | 3.49× |
+| R06 | READ | 0.052 | 0.044 | 1.18× |
+| R07 | READ | 0.019 | 0.019 | 1.00× |
+| R08 | READ | 7.485 | 1.659 | 4.51× |
+| R09 | READ | 24.589 | 12.597 | 1.95× |
+| R10 | READ | 2.886 | 0.028 | 103.07× |
+| R11 | READ | 6.524 | 2.607 | 2.50× |
+| R12 | READ | 1.236 | 0.500 | 2.47× |
+| R13 | READ | 16.628 | 0.062 | 268.19×* |
+| R14 | READ | 20.267 | 19.388 | 1.05× |
+| R15 | READ | 3.883 | 4.082 | 0.95× |
+| R16 | READ | 119.762 | 119.792 | 1.00× |
+| R17 | READ | 5.138 | 4.861 | 1.06× |
+| R18 | READ | 25.878 | 15.983 | 1.62× |
+| R19 | READ | 6,109.484 | 3.890 | 1,570.56× |
+| R20 | READ | 2.627 | 1.233 | 2.13× |
+| R21 | READ | 1.086 | 0.272 | 3.99× |
+| R22 | READ | 0.152 | 0.066 | 2.30× |
+| R23 | READ | 42.755 | 12.926 | 3.31× |
+| R24 | READ | 2.326 | 0.027 | 86.15× |
+| R25 | READ | 0.772 | 0.446 | 1.73× |
+| W01 | WRITE | 0.708 | 0.790 | 0.90× |
+| W02 | WRITE | 0.558 | 0.601 | 0.93× |
+| W03 | WRITE | 0.620 | 0.340 | 1.82× |
+| W04 | WRITE | 136.336 | 157.011 | 0.87× |
+| W05 | WRITE | 14.503 | 7.739 | 1.87× |
+| **Total (30 averages)** | | **6,563.538** | **368.052** | **17.83×** |
 
-## 6. Expected gains and costs to measure
+*R13’s ratio compares execution time only; its rewritten query also fixes the original NULL-related result bug.
 
-R19 is the highest-priority query to remeasure after adding `viewing_activity_title_started_idx`. R01, R03, R10, R13, R23, and R24 also have matching index or query changes. R16 aggregates the full viewing history and is likely to remain scan-bound. R09 and R18 aggregate broad date ranges, so a sequential scan may still be cheaper than an index scan.
+### Main observed gains and costs
 
-Every added index has a storage and write-maintenance cost. Measure W01–W05 after indexing, especially W04’s invoice batch. Record each index’s size with `pg_relation_size` and compare the before/after plans. No read/write trade-off is claimed without those measurements.
+- **R19:** 6,109.484 ms → 3.890 ms. The optimized plan uses an index-only scan on `viewing_activity_title_started_idx` instead of scanning viewing activity for each Original.
+- **R01:** 9.348 ms → 0.037 ms. The plan uses an index-only scan on the partial unfinished-view index.
+- **R10:** 2.886 ms → 0.028 ms. The functional index is used for the case-insensitive email lookup.
+- **R13:** 16.628 ms → 0.062 ms. The episode index supports the corrected `NOT EXISTS` probe.
+- **R16:** essentially unchanged (119.762 ms → 119.792 ms); its plan still scans and groups the full activity history.
+- **R15** is slightly slower (3.883 ms → 4.082 ms); **W01**, **W02**, and **W04** also take longer after indexing. W04 rose from 136.336 ms to 157.011 ms. These are measured workload-level changes; per-index write cost and index size have not been isolated.
 
-## 7. Reproducibility and verification status
+## 6. Correctness, storage, and reproducibility
 
 | Check | Status |
 |---|---|
-| Baseline | Available: 30 averages and scan-node summaries in `benchmarks/results/baseline/summary.csv` |
-| Optimized summary and raw plans | Pending: `benchmarks/results/optimized/summary.csv` is empty |
-| Index script applied to the database | Not verified from this environment |
-| R09, R12, R18 result equivalence | Pending row-count or `EXCEPT` comparisons |
-| R13 corrected result | Pending database comparison; document its difference from the original query |
-| Write overhead and index sizes | Pending optimized benchmark and `pg_relation_size` measurements |
+| Baseline and optimized summaries | Present; each contains 30 query averages and scan-node summaries. |
+| Raw plans | 30 baseline and 30 optimized files are present. |
+| R09, R12, R18 result equivalence | Not shown in available artifacts; add row-count or `EXCEPT` checks. |
+| R13 correction | SQL is rewritten; explicitly record original versus corrected output. |
+| Index sizes | Not measured in this report. Use `pg_relation_size` for each created index. |
+| Per-index write overhead | Not isolated; only before/after query averages are available. |
 
-After loading the seed data and applying `sql/05_indexes.sql` to the project database, run:
+The optimized workload can be reproduced with:
 
 ```bash
 ./benchmarks/run_benchmark.sh netflix_bench optimized 3 sql/06_optimized_queries.sql
 ```
 
-Use the same machine, database contents, and run count as the baseline, then replace the pending cells with measured results.
+The current index and optimized-query files were reviewed against the Netflix schema and workload. Keep the original `queries/workload_30.sql` unchanged.

@@ -1,0 +1,3 @@
+Raw EXPLAIN plan: R21
+STATUS: NOT MEASURED — large_data.zip and a large benchmark run are unavailable in this workspace.
+This is a placeholder, not an execution plan. Replace it with the three-run output from benchmarks/run_benchmark.sh.
